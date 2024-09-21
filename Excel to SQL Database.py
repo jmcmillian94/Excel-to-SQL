@@ -4,7 +4,7 @@ import sqlite3
 import os
 
 # Function to convert Excel to SQL
-def convert_to_sql(excel_file, db_name):
+def convert_to_sql(excel_file, db_name, table_name):
     # Read Excel file into pandas DataFrame
     df = pd.read_excel(excel_file)
     
@@ -12,7 +12,7 @@ def convert_to_sql(excel_file, db_name):
     conn = sqlite3.connect(db_name + ".db")
     
     # Export DataFrame to SQL table
-    df.to_sql("table_name", conn, if_exists='replace', index=False)
+    df.to_sql(table_name, conn, if_exists='replace', index=False)
     
     # Close the connection
     conn.close()
@@ -30,4 +30,5 @@ if __name__ == "__main__":
         print("Error: The specified Excel file does not exist. Please check the file path.")
     else:
         db_name = input("Enter the name for the SQL database (without extension): ")
-        convert_to_sql(excel_file, db_name)
+        table_name = input("Enter the name for the SQL table:")
+        convert_to_sql(excel_file, db_name,table_name)
