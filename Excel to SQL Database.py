@@ -31,4 +31,4 @@ if __name__ == "__main__":
     else:
         db_name = input("Enter the name for the SQL database (without extension): ")
         table_name = input("Enter the name for the SQL table:")
-        convert_to_sql(excel_file, db_name,table_name)
+        convert_to_sql(excel_file, table_name,db_name)
