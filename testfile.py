@@ -39,27 +39,30 @@ def convertCSVToSQL(fileToConvert,dbName,tableName):
 
 # main execution block
 if __name__ == "__main__":
-    choice = input("Are you using an excel file(1) or a csv file(2)?")
-    if choice == '1':
-        fileToConvert = input("Enter the path of the Excel file (including .xlsx extension): ")
-        # Validate if the file exists
-        if not os.path.exists(fileToConvert):
-            print("Error: The specified Excel file does not exist. Please check the file path.")
-        else:
-            dbName = input("Enter the name for the SQL database (without extension): ")
-            tableName = input("Enter the name for the SQL table:")
-            convertExcelToSQL(fileToConvert, dbName,tableName)
-    if choice == '2':
-        fileToConvert = input("Enter the path of the csv file (including .csv extension): ")
-         # Validate if the file exists
-        if not os.path.exists(fileToConvert):
-            print("Error: The specified CSV file does not exist. Please check the file path.")
-        else:
-            dbName = input("Enter the name for the SQL database (without extension): ")
-            tableName = input("Enter the name for the SQL table:")
-            convertCSVToSQL(fileToConvert, dbName,tableName)
-    else:
-        print('invalid selection. please select either option 1 or 2')
+    while True:
+        choice = input("Are you using an excel file(1) or a csv file(2)?")
+        try:
+            if choice == '1':
+                fileToConvert = input("Enter the path of the Excel file (including .xlsx extension): ")
+                # Validate if the file exists
+                if not os.path.exists(fileToConvert):
+                    print("Error: The specified Excel file does not exist. Please check the file path.")
+                else:
+                    dbName = input("Enter the name for the SQL database (without extension): ")
+                    tableName = input("Enter the name for the SQL table:")
+                    convertExcelToSQL(fileToConvert, dbName,tableName)
+            if choice == '2':
+                fileToConvert = input("Enter the path of the csv file (including .csv extension): ")
+                # Validate if the file exists
+                if not os.path.exists(fileToConvert):
+                    print("Error: The specified CSV file does not exist. Please check the file path.")
+                else:
+                    dbName = input("Enter the name for the SQL database (without extension): ")
+                    tableName = input("Enter the name for the SQL table:")
+                    convertCSVToSQL(fileToConvert, dbName,tableName)
+        except ValueError:
+            print("invalid choice. Please select again")
+            continue
 
     
     
