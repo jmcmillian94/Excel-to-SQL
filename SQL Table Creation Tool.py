@@ -136,7 +136,7 @@ while True: #start an infinite loop for adding multiple tables
     
     primaryKeys = []
     while True:
-        pkChoice = get_input("Enter the column name to set as a primary key (or type 'done' if finished):\n")
+        pkChoice = get_input("Enter the column name to set as a primary key (or type 'done' if finished)\n *Multiple columns can be selected in order to create a composite key:\n")
         if pkChoice.lower() == 'done':
             break
         elif pkChoice in columns:
