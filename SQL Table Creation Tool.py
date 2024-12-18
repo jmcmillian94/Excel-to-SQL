@@ -30,30 +30,58 @@ def recreateTableWithPrimaryKey(dbName, tableName, columns, primaryKeys):
     dbConnect = sqlite3.connect(dbName)
     cursor = dbConnect.cursor()
 
-    # Retrieve the data from the existing table
-    cursor.execute(f"SELECT * FROM {tableName}")
-    rows = cursor.fetchall()
+    try:
+        # Retrieve the data from the existing table
+        cursor.execute(f"SELECT * FROM {tableName}")
+        rows = cursor.fetchall()
 
-    # Convert columns to a list to avoid Index errors
-    columns = list(columns)
+        # Convert columns to a list to avoid Index errors
+        columns = list(columns)
 
-    # Drop the existing table
-    cursor.execute(f"DROP TABLE {tableName}")
+        # Drop the existing table
+        cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
 
-    # Create a new table schema with the primary key(s)
-    columns_with_types = [f'"{col}" TEXT' for col in columns]  # Assuming TEXT as default type
-    for pk in primaryKeys:
-        columns_with_types[columns.index(pk)] += " PRIMARY KEY"
-    create_table_query = f"CREATE TABLE \"{tableName}\" ({', '.join(columns_with_types)})"
-    cursor.execute(create_table_query)
+        # Create a new table schema with the composite primary key
+        columns_with_types = [f'"{col}" TEXT' for col in columns]  # Assuming TEXT as default type
+        if primaryKeys:
+            primary_key_clause = f", PRIMARY KEY ({', '.join([f'\"{pk}\"' for pk in primaryKeys])})"
+        else:
+            primary_key_clause = ""
+        create_table_query = f"CREATE TABLE \"{tableName}\" ({', '.join(columns_with_types)}{primary_key_clause})"
+        cursor.execute(create_table_query)
 
-    # Insert the data back into the new table
-    placeholders = ', '.join(['?' for _ in columns])
-    cursor.executemany(f"INSERT INTO \"{tableName}\" VALUES ({placeholders})", rows)
+        # Insert the data back into the new table
+        placeholders = ', '.join(['?' for _ in columns])
+        cursor.executemany(f"INSERT INTO \"{tableName}\" VALUES ({placeholders})", rows)
 
-    dbConnect.commit()
-    dbConnect.close()
-    print(f"Primary key(s) {', '.join(primaryKeys)} added to table '{tableName}' successfully")
+        dbConnect.commit()
+        print(f"Primary key(s) {', '.join(primaryKeys)} added to table '{tableName}' successfully")
+
+    except sqlite3.IntegrityError as e:
+        # Handle unique constraint failure
+        print(f"Error: Cannot set column(s) {', '.join(primaryKeys)} as primary key(s). {str(e)}")
+        print("Rolling back changes...")
+        dbConnect.rollback()  # Revert to the previous state
+
+        # Ensure the partially created table is removed
+        cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
+
+        # Recreate the original table without primary key changes
+        columns_with_types = [f'"{col}" TEXT' for col in columns]
+        create_table_query = f"CREATE TABLE \"{tableName}\" ({', '.join(columns_with_types)})"
+        cursor.execute(create_table_query)
+
+        # Reinsert the original data
+        cursor.executemany(f"INSERT INTO \"{tableName}\" VALUES ({placeholders})", rows)
+        dbConnect.commit()
+
+        print("Table restored without primary key changes.")
+
+    finally:
+        dbConnect.close()
+
+
+
 
 
 # this function terminates the program at anytime if the user types quit
