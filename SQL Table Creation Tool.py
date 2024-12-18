@@ -23,6 +23,38 @@ def convertFileToSQLiteTable(fileToConvert,dbName,tableName):
     df.to_sql(tableName, dbConnect, if_exists='replace', index=False)
     dbConnect.close()
     print(f"Table added to'{dbName}' successfully")
+    return df.columns  # Return the column names for further processing
+
+# function to recreate table with a primary key
+def recreateTableWithPrimaryKey(dbName, tableName, columns, primaryKeys):
+    dbConnect = sqlite3.connect(dbName)
+    cursor = dbConnect.cursor()
+
+    # Retrieve the data from the existing table
+    cursor.execute(f"SELECT * FROM {tableName}")
+    rows = cursor.fetchall()
+
+    # Convert columns to a list to avoid Index errors
+    columns = list(columns)
+
+    # Drop the existing table
+    cursor.execute(f"DROP TABLE {tableName}")
+
+    # Create a new table schema with the primary key(s)
+    columns_with_types = [f'"{col}" TEXT' for col in columns]  # Assuming TEXT as default type
+    for pk in primaryKeys:
+        columns_with_types[columns.index(pk)] += " PRIMARY KEY"
+    create_table_query = f"CREATE TABLE \"{tableName}\" ({', '.join(columns_with_types)})"
+    cursor.execute(create_table_query)
+
+    # Insert the data back into the new table
+    placeholders = ', '.join(['?' for _ in columns])
+    cursor.executemany(f"INSERT INTO \"{tableName}\" VALUES ({placeholders})", rows)
+
+    dbConnect.commit()
+    dbConnect.close()
+    print(f"Primary key(s) {', '.join(primaryKeys)} added to table '{tableName}' successfully")
+
 
 # this function terminates the program at anytime if the user types quit
 def get_input(prompt):
@@ -47,7 +79,7 @@ print("Type 'quit' at anytime to terminate the program.\n")
 
 dbName = get_input("Please enter the filepath and name for the database you would like to use (either a new db or an existing one):\n")
 
-if os.path.exists(dbName) == True:
+if os.path.exists(dbName):
     print("Database found. You may now update it.\n")
 else:
     print("No Database with that path exists. A new database will be created.\n")
@@ -62,11 +94,31 @@ while True: #start an infinite loop for adding multiple tables
 
         
     tableName = get_input("Please enter a name for the table (existing tables of the same name will be overwritten!):\n")
-    convertFileToSQLiteTable(fileToConvert,dbName,tableName)
+    columns = convertFileToSQLiteTable(fileToConvert,dbName,tableName)
+
+    # Ask if the user wants to add primary keys
+    print("\nThe following columns are available in the table:")
+    for idx, column in enumerate(columns, 1):
+        print(f"{idx}. {column}")
+    
+    primaryKeys = []
+    while True:
+        pkChoice = get_input("Enter the column name to set as a primary key (or type 'done' if finished):\n")
+        if pkChoice.lower() == 'done':
+            break
+        elif pkChoice in columns:
+            primaryKeys.append(pkChoice)
+            print(f"Column '{pkChoice}' added as a primary key.")
+        else:
+            print("Invalid column name. Please try again.")
+
+    if primaryKeys:
+        recreateTableWithPrimaryKey(dbName, tableName, columns, primaryKeys)
         
     menuChoice = get_input("Would you like to add another table to the database? y/n\n")
     if menuChoice != 'y':
         print("Closing program...")
         time.sleep(1)
         break
+
 
