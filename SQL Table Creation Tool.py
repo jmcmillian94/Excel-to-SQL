@@ -25,28 +25,37 @@ def convertFileToSQLiteTable(fileToConvert,dbName,tableName):
     print(f"Table added to'{dbName}' successfully")
     return df.columns  # Return the column names for further processing
 
-# function to recreate table with a primary key
+# Function to recreate table with a primary key
 def recreateTableWithPrimaryKey(dbName, tableName, columns, primaryKeys):
+    import sqlite3
+    
     dbConnect = sqlite3.connect(dbName)
     cursor = dbConnect.cursor()
 
     try:
+        # Retrieve the schema of the existing table to get column data types
+        cursor.execute(f"PRAGMA table_info({tableName})")
+        schema_info = cursor.fetchall()  # Fetch schema details
+
+        # Extract column names and their types
+        columns_with_types = [
+            f'"{row[1]}" {row[2]}' for row in schema_info
+        ]  # row[1]: column name, row[2]: data type
+
         # Retrieve the data from the existing table
         cursor.execute(f"SELECT * FROM {tableName}")
         rows = cursor.fetchall()
 
-        # Convert columns to a list to avoid Index errors
-        columns = list(columns)
-
         # Drop the existing table
         cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
 
-        # Create a new table schema with the composite primary key
-        columns_with_types = [f'"{col}" TEXT' for col in columns]  # Assuming TEXT as default type
+        # Add the primary key clause if applicable
         if primaryKeys:
             primary_key_clause = f", PRIMARY KEY ({', '.join([f'\"{pk}\"' for pk in primaryKeys])})"
         else:
             primary_key_clause = ""
+        
+        # Create a new table with the correct schema and primary key
         create_table_query = f"CREATE TABLE \"{tableName}\" ({', '.join(columns_with_types)}{primary_key_clause})"
         cursor.execute(create_table_query)
 
@@ -67,7 +76,6 @@ def recreateTableWithPrimaryKey(dbName, tableName, columns, primaryKeys):
         cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
 
         # Recreate the original table without primary key changes
-        columns_with_types = [f'"{col}" TEXT' for col in columns]
         create_table_query = f"CREATE TABLE \"{tableName}\" ({', '.join(columns_with_types)})"
         cursor.execute(create_table_query)
 
@@ -79,9 +87,6 @@ def recreateTableWithPrimaryKey(dbName, tableName, columns, primaryKeys):
 
     finally:
         dbConnect.close()
-
-
-
 
 
 # this function terminates the program at anytime if the user types quit
