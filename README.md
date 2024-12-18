@@ -1,5 +1,5 @@
 # Excel-to-SQL
-A simple tool that take an excel or csv file and converts it to a SQLite table.
+A simple tool that takes an excel or csv file and converts it to a SQLite table.
 
 First the program will ask for a database file path. If it finds one at the designated path it will allow you to modify it by adding or replacing tables. If it does not find a database it will create one.
 
@@ -12,3 +12,5 @@ Once the table is created it will then list all columns in the newly created tab
 Once the table has been created it gives you the option to create additional tables or exit the program.
 
 You may type 'quit' at any time in order to terminate the program.
+
+A requirements.txt file has been provided for the installation of all necessary files for a virtual enviornment.
