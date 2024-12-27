@@ -14,3 +14,5 @@ Once the table has been created it gives you the option to create additional tab
 You may type 'quit' at any time in order to terminate the program.
 
 A requirements.txt file has been provided for the installation of all necessary files for a virtual enviornment.
+
+[Check out a video demonstration of the tool here] (https://www.youtube.com/watch?v=CssVo7bMy-k)
